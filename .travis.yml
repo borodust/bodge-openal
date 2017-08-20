@@ -1,0 +1,59 @@
+language: c
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - gcc-multilib
+    - libpulse-dev
+    - portaudio19-dev
+    - libasound2-dev
+
+env:
+  global:
+    - NAME: openal
+    - secure: eWZtOuoxCGWgLWxyuFSBvgt38hbJ0akDJeq768nAS5alL4AobhuhpM5NJpowGMvlmrYbYBib2EdtnE9hqFAHnEvHHziFh6ShCb8Up+UlbTg1LxfoWfSV20jw+zEHaP4h6mYpYzM90I1nfAXqQFxyHSCdrRDyaWEBKdtJvUgSqPfAbv77b84CK+FibU7BmgOZIRsk3x/pOTGM6jIxI6DZr6ZKPzrtWF9JHAA1ZReFACiudoDzGV9u10Y3uc9odWB3II6nr/CkTvprQlZ+BEyQj/4kwkJxHwXdLVZF5QPpv5YXhJ2ZdKrvSx6VzWAxLmEzSfXgMh8oc806vPLjOevK0zdxazGQcI4WEvxFrXyeoRmpDhX5+4lXOyBwprIGowZ5RpwNpa/lB4TdOXf/PPvWT5i6C3nJdsOrunZ/n1HtB3iCtEqyOn39pDdWhDLrcEN8/f8VHIn91IyxXX63kTC6xmQFtUxgelgQskDevfXPwTWuJYp4pHPHmdl0oTL8n9bKr0aC5uY2L2mIEXuMYXjkGEvekagHUZhcmlDyI5fXF+oMGXqRkjfcnHAw+9/+o+9ICx9ln/pBSHQSK+k8aTWE0UQvLVgTByXgHAbJX/+AjcnzfzS3I8Mp2+zEWMdvh2YOEyUH0VJfSLVkcrm2orPQHJz+O2OK9HfWQ9gnrjWUgvo=
+
+matrix:
+  include:
+  - os: linux
+    env:
+      - ARCH=i686
+      - CFLAGS=-m32
+      - EXTENSION=so
+  - os: linux
+    env:
+      - ARCH=x86_64
+      - CFLAGS=-m64
+      - EXTENSION=so
+  - os: osx
+    env:
+      - ARCH=i686
+      - CFLAGS=-m32
+      - EXTENSION=dylib
+  - os: osx
+    env:
+      - ARCH=x86_64
+      - CFLAGS=-m64
+      - EXTENSION=dylib
+
+branches:
+  only:
+  - "/^v\\d+(\\.\\d+)+$/"
+
+
+script:
+  - cd lib/ && make clean build
+
+before_deploy:
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - mv $TRAVIS_BUILD_DIR/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
+
+deploy:
+  provider: releases
+  api-key: $GITHUB_TOKEN
+  file: $TARGET_FILE
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
