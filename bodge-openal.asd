@@ -1,5 +1,5 @@
 (asdf:defsystem bodge-openal
-  :description "Thin wrapper around OpenAL for cl-bodge system"
+  :description "Thin wrapper over OpenAL cross-platform 3D audio API"
   :version "1.0.0"
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
@@ -14,3 +14,14 @@
                (:file "openal")
                (:module spec)
                (:module openal-includes :pathname "lib/openal/include/")))
+
+
+
+(asdf:defsystem bodge-openal/example
+  :description "bodge-openal example"
+  :version "1.0.0"
+  :author "Pavel Korolev"
+  :mailto "dev@borodust.org"
+  :license "MIT"
+  :depends-on (alexandria static-vectors openal-blob bodge-openal claw)
+  :components ((:file "example")))
