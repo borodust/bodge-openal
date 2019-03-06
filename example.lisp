@@ -49,11 +49,11 @@
   (claw:with-float-traps-masked ()
     ;; Open default sound device
     (let ((dev (%alc:open-device nil)))
-      (when (claw:wrapper-null-p dev)
+      (when (claw:null-pointer-p dev)
         (error "Couldn't open sound device"))
       ;; Create OpenAL context for opened device
       (let ((ctx (%alc:create-context dev nil)))
-        (when (claw:wrapper-null-p ctx)
+        (when (claw:null-pointer-p ctx)
           (error "Failed to create OpenAL context"))
         ;; Assign OpenAL context to the application
         (%alc:make-context-current ctx)
