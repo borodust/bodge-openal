@@ -5,11 +5,14 @@ environment:
   global:
     NAME: openal
     CONFIG: Release
+    ASDF_SYSTEM: bodge-openal
   matrix:
   - platform: x64
+    MSYS_PATH: C:\msys64\mingw64\bin\;C:\msys64\usr\bin\
     ARCH: x86_64
     GENERATOR: "Visual Studio 15 2017 Win64"
   - platform: x86
+    MSYS_PATH: C:\msys64\mingw32\bin\;C:\msys64\usr\bin\
     ARCH: i686
     GENERATOR: "Visual Studio 15 2017"
 
@@ -25,28 +28,41 @@ install:
   - git submodule update --init --recursive
 
 build_script:
-  - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
-  - cd lib\openal\build
-  - >
-    cmake -G"%GENERATOR%"
-    -DALSOFT_REQUIRE_WINMM=ON
-    -DALSOFT_REQUIRE_DSOUND=ON
-    -DALSOFT_REQUIRE_MMDEVAPI=ON
-    -DALSOFT_UTILS=OFF
-    -DALSOFT_NO_CONFIG_UTIL=OFF
-    -DALSOFT_EXAMPLES=OFF
-    -DALSOFT_TESTS=OFF
-    -DALSOFT_CONFIG=OFF
-    -DALSOFT_INSTALL=OFF
-    -DALSOFT_CPUEXT_SSE3=OFF
-    -DALSOFT_CPUEXT_SSE4_1=OFF
-    -DALSOFT_EMBED_HRTF_DATA=YES ..
+  - cd lib/openal/build
+  - >-
+    cmake -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=Release
+    -DALSOFT_BUILD_ROUTER=ON -DALSOFT_REQUIRE_WINMM=ON -DALSOFT_REQUIRE_DSOUND=ON
+    -DALSOFT_REQUIRE_WASAPI=ON -DALSOFT_EMBED_HRTF_DATA=YES
+    -DALSOFT_UTILS=OFF -DALSOFT_NO_CONFIG_UTIL=OFF -DALSOFT_EXAMPLES=OFF
+    -DALSOFT_TESTS=OFF -DALSOFT_CONFIG=OFF -DALSOFT_INSTALL=OFF
+    -DALSOFT_CPUEXT_SSE3=OFF -DALSOFT_CPUEXT_SSE4_1=OFF ..
   - cmake --build . --config Release --clean-first
+  - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
+  - set SPEC_ARCHIVE=%TARGET_ARTIFACT%-spec.zip
+  - set PATH=%MSYS_PATH%;%PATH%
+  - set APPVEYOR_BUILD_DIR=$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')
+  - >-
+    sh -c "
+    export PATH=$HOME/bin/:$PATH
+    && pacman --needed --noconfirm -S zip unzip base-devel
+    && curl -L http://bodge.borodust.org/files/install.sh | sh
+    && rm -rf %APPVEYOR_BUILD_DIR%/spec/*
+    && ln -s %APPVEYOR_BUILD_DIR%/ ~/quicklisp/local-projects/
+    && $HOME/bin/lisp %APPVEYOR_BUILD_DIR%/util/regen-spec.lisp '%ASDF_SYSTEM%' t %ARCH%
+    && cd ~/quicklisp/local-projects/%ASDF_SYSTEM%/ && zip -r spec.zip spec/
+    && mv ~/quicklisp/local-projects/%ASDF_SYSTEM%/spec.zip %APPVEYOR_BUILD_DIR%/
+    "
   - mv %APPVEYOR_BUILD_FOLDER%\lib\openal\build\Release\OpenAL32.dll %APPVEYOR_BUILD_FOLDER%\%TARGET_ARTIFACT%
+  - mv %APPVEYOR_BUILD_FOLDER%\spec.zip %APPVEYOR_BUILD_FOLDER%\%SPEC_ARCHIVE%
+
 
 artifacts:
   - path: $(TARGET_ARTIFACT)
     name: target_artifact
+
+  - path: $(SPEC_ARCHIVE)
+    name: spec_archive
+
 
 deploy:
   provider: GitHub
@@ -55,7 +71,7 @@ deploy:
   description: $(APPVEYOR_REPO_COMMIT_MESSAGE)
   auth_token:
     secure: Z5XWjDOBlCrmfz3SQAjnLKtdgI5B2b/owJhRPNWYGrI+qwVNbBc4cZiroBZReWP7
-  artifact: target_artifact
+  artifact: target_artifact, spec_archive
   force_update: true
   draft: false
   prerelease: false

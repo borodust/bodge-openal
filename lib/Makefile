@@ -8,23 +8,27 @@ SRC =
 OBJ = $(SRC:.c=.o)
 LIBS = -lm
 STATIC_LIBS = -lopenal
+BODGE_CMAKE_OPTS =
 
 
 ifeq ($(OS),Windows_NT)
 	BIN := $(BIN).dll.bodged
 	CFLAGS := $(CFLAGS) -Wl,-soname,$(BIN)
 	LFLAGS := -Wl,--whole-archive -Wl,-Bstatic $(STATIC_LIBS) -Wl,--no-whole-archive -Wl,-Bdynamic $(LIBS)
+	BODGE_CMAKE_OPTS += -DALSOFT_REQUIRE_WINMM=ON -DALSOFT_REQUIRE_DSOUND=ON -DALSOFT_REQUIRE_WASAPI=ON
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Darwin)
 		BIN := $(BIN).dylib.bodged
 		CFLAGS := $(CFLAGS) -Wl,-install_name,$(BIN)
-		LIBS += -framework CoreAudio -framework OpenAL -framework AudioUnit -framework AudioToolbox
+		LIBS += -framework CoreAudio -framework OpenAL -framework AudioUnit -framework AudioToolbox -framework CoreFoundation
 		LFLAGS := $(LIBS) -all_load $(STATIC_LIBS)
+		BODGE_CMAKE_OPTS += -DALSOFT_REQUIRE_COREAUDIO=ON
 	else
 		BIN := $(BIN).so.bodged
 		CFLAGS := $(CFLAGS) -Wl,-soname,$(BIN)
 		LFLAGS := -Wl,--whole-archive -Wl,-Bstatic $(STATIC_LIBS) -Wl,--no-whole-archive -Wl,-Bdynamic $(LIBS)
+		BODGE_CMAKE_OPTS += -DALSOFT_BACKEND_JACK=OFF
 	endif
 endif
 
@@ -35,7 +39,7 @@ build: $(BIN)
 $(BIN):
 	mkdir -p openal/build/
 	cd openal/build && \
-	cmake \
+	cmake -G'Unix Makefiles' \
 	      -DCMAKE_C_FLAGS=$(ENV_CFLAGS) \
 	      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	      -DCMAKE_BUILD_TYPE=Release  \
@@ -49,8 +53,8 @@ $(BIN):
 	      -DALSOFT_INSTALL=OFF \
 	      -DALSOFT_CPUEXT_SSE3=OFF \
 	      -DALSOFT_CPUEXT_SSE4_1=OFF \
-	      -DALSOFT_BACKEND_JACK=OFF .. && \
-	cmake --build . --config release
+	      $(BODGE_CMAKE_OPTS) .. && \
+	cmake --build . --config Release --clean-first
 	$(CC) -shared $(SRC) $(CFLAGS) -o $(BIN) $(LFLAGS)
 
 clean:
