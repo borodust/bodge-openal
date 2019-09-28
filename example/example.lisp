@@ -1,15 +1,16 @@
 (cl:defpackage :openal.example
-  (:use :cl)
+  (:use :cl :cffi-c-ref)
   (:export run))
 (cl:in-package :openal.example)
 
 ;; original: https://freesound.org/people/waveplay/sounds/213725/
-(defvar *sample-file* (asdf:system-relative-pathname :bodge-openal/example "sample.raw"))
+(defvar *sample-file* (asdf:system-relative-pathname :bodge-openal/example
+                                                     "example/sample.raw"))
 
 
 (defun wait-for-source (source)
   "Wait until provided source is not in AL_PLAYING state"
-  (claw:c-with ((playing-p %al:int))
+  (c-with ((playing-p %al:int))
     (setf playing-p %al:+playing+)
     (loop while (= playing-p %al:+playing+) do
       (%al:get-sourcei source %al:+source-state+ (playing-p &))
@@ -17,7 +18,7 @@
 
 
 (defun play-sample ()
-  (claw:c-with ((buf %al:uint)
+  (c-with ((buf %al:uint)
                 (source %al:uint))
     ;; Generate buffer to hold our sample data
     (%al:gen-buffers 1 (buf &))
@@ -46,14 +47,14 @@
 
 
 (defun run ()
-  (claw:with-float-traps-masked ()
+  (float-features:with-float-traps-masked ()
     ;; Open default sound device
     (let ((dev (%alc:open-device nil)))
-      (when (claw:null-pointer-p dev)
+      (when (cffi:null-pointer-p dev)
         (error "Couldn't open sound device"))
       ;; Create OpenAL context for opened device
       (let ((ctx (%alc:create-context dev nil)))
-        (when (claw:null-pointer-p ctx)
+        (when (cffi:null-pointer-p ctx)
           (error "Failed to create OpenAL context"))
         ;; Assign OpenAL context to the application
         (%alc:make-context-current ctx)
