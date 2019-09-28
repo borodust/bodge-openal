@@ -44,25 +44,19 @@ branches:
 
 install:
   - curl -L http://bodge.borodust.org/files/install.sh | sh
-  - ln -s $TRAVIS_BUILD_DIR/ ~/quicklisp/local-projects/$ASDF_SYSTEM
 
 script:
-  - cd lib/ && make clean build
-  - rm -rf $TRAVIS_BUILD_DIR/spec/*
-  - lisp "$TRAVIS_BUILD_DIR/util/regen-spec.lisp" "$ASDF_SYSTEM" t $ARCH
-  - cd $TRAVIS_BUILD_DIR/ && zip -r spec.zip spec/
+  - cd src/lib/ && make clean build
 
 before_deploy:
   - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
-  - mv $TRAVIS_BUILD_DIR/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
-  - export SPEC_ARCHIVE=$TARGET_FILE-spec.zip
-  - mv $TRAVIS_BUILD_DIR/spec.zip $SPEC_ARCHIVE
+  - mv $TRAVIS_BUILD_DIR/src/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
 
 
 deploy:
   provider: releases
   api-key: $GITHUB_TOKEN
-  file: [$TARGET_FILE, $SPEC_ARCHIVE]
+  file: [$TARGET_FILE]
   skip_cleanup: true
   overwrite: true
   on:
