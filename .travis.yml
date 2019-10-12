@@ -13,28 +13,29 @@ env:
   global:
     - NAME: openal
     - ASDF_SYSTEM: bodge-openal
+    - PATH: ~/.bodge/bin/:$PATH
     - secure: "qIO7O8uY6YwOtKeNxBdy9fezWj/6/mSg7JvrpxzVX2moVG/kmw1RWh4GcTWS2AS8Lw+hdPUlp9WGZzObKo8oqBVM7XclTKtF4gzMpKE7zdT8MWnvCrlNLaWHEuN7hY33vOsoIdwwwov9Il9Jn7vLlhKBBcOpaK0+ji8PDWZx8V5xj4bvUL2CIZGw8HvBpPedGonxNpwUSJbNTQj5/v0oFZPX3teLpXTaN+GF318Dtkj3L7jEZPBdoMTpeivqwhCl0fHfxLqDZj4KliWDFb/nefZHaGgptlq5j4EXTOBIXLWhhoXSymP2PsARMpHvLokyq7uls5lFo3b959M0yVHsbFb4U5hJGRuty8IKrMIJNFPtCYJLMgaU53lS2iXstG0NO8PZxjuqOSqbW1kabuKotLnJKFpCfjkzhW1np8DfdEZfkvQ3/sf9QJrEO8m9KMng3tOnum+r/OvmFWUMH9ngyFc9k9umBqwYD8w5uUvtZ1araakThMABogoTfWho1HoLobsIwy9osdoBGlD4ERhfrX0/Y5P/vkqtukhD6ZRFJ0bR9I+pySJBWzJJqLRpOV3ib7MgItgKEDLx6l567F1RNE54SwMe1b6uLRfpjHuBeUtOv3pyEkZSey/KCijjj2fmSPrCkIfKhnRSii9MD8HSKarMp8HdMCA80tGS3q+BLk0="
 
 matrix:
   include:
   - os: linux
     env:
-      - ARCH=i686
+      - TARGET_ARCH=i686
       - CFLAGS=-m32
       - EXTENSION=so
   - os: linux
     env:
-      - ARCH=x86_64
+      - TARGET_ARCH=x86_64
       - CFLAGS=-m64
       - EXTENSION=so
   - os: osx
     env:
-      - ARCH=i686
+      - TARGET_ARCH=i686
       - CFLAGS=-m32
       - EXTENSION=dylib
   - os: osx
     env:
-      - ARCH=x86_64
+      - TARGET_ARCH=x86_64
       - CFLAGS=-m64
       - EXTENSION=dylib
 
@@ -46,17 +47,19 @@ install:
   - curl -L http://bodge.borodust.org/files/install.sh | sh
 
 script:
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - export TARGET_SPEC=$TARGET_FILE-spec.zip
   - cd src/lib/ && make clean build
+  - lisp regen-local-spec-and-zip --arch $TARGET_ARCH "$TRAVIS_BUILD_DIR" $ASDF_SYSTEM "$TARGET_SPEC"
 
 before_deploy:
-  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
   - mv $TRAVIS_BUILD_DIR/src/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
 
 
 deploy:
   provider: releases
   api-key: $GITHUB_TOKEN
-  file: [$TARGET_FILE]
+  file: [$TARGET_FILE, $TARGET_SPEC]
   skip_cleanup: true
   overwrite: true
   on:
