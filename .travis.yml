@@ -1,9 +1,11 @@
 language: c
 sudo: false
+dist: xenial
 
 addons:
   apt:
     packages:
+    - patchelf
     - gcc-multilib
     - libpulse-dev
     - portaudio19-dev
@@ -47,13 +49,13 @@ install:
   - curl -L http://bodge.borodust.org/files/install.sh | sh
 
 script:
-  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION.bodged-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
+  - export TARGET_FILE=$TRAVIS_BUILD_DIR/lib$NAME.$EXTENSION-$TARGET_ARCH-$TRAVIS_OS_NAME-$TRAVIS_BRANCH
   - export TARGET_SPEC=$TARGET_FILE-spec.zip
   - cd src/lib/ && make clean build
   - lisp regen-local-spec-and-zip --arch $TARGET_ARCH "$TRAVIS_BUILD_DIR" $ASDF_SYSTEM "$TARGET_SPEC"
 
 before_deploy:
-  - mv $TRAVIS_BUILD_DIR/src/lib/lib$NAME.$EXTENSION.bodged $TARGET_FILE
+  - mv $TRAVIS_BUILD_DIR/src/lib/lib$NAME.$EXTENSION $TARGET_FILE
 
 
 deploy:

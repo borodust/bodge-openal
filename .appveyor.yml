@@ -37,7 +37,7 @@ build_script:
     -DALSOFT_TESTS=OFF -DALSOFT_CONFIG=OFF -DALSOFT_INSTALL=OFF
     -DALSOFT_CPUEXT_SSE3=OFF -DALSOFT_CPUEXT_SSE4_1=OFF ..
   - cmake --build . --config Release --clean-first
-  - set TARGET_ARTIFACT=lib%NAME%.dll.bodged-%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
+  - set TARGET_ARTIFACT=lib%NAME%.dll-%TARGET_ARCH%-windows-%APPVEYOR_REPO_TAG_NAME%
   - set TARGET_SPEC=%TARGET_ARTIFACT%-spec.zip
   - set PATH=%MSYS_PATH%;%PATH%
   - set APPVEYOR_BUILD_DIR=$(cygpath -u '%APPVEYOR_BUILD_FOLDER%')
