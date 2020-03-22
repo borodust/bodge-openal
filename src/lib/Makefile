@@ -1,6 +1,6 @@
 BIN = libopenal
 
-BODGE_CMAKE_OPTS =
+STRIP := strip -s
 
 ifeq ($(OS),Windows_NT)
 	BIN := $(BIN).dll
@@ -12,6 +12,7 @@ else
 		BIN := $(BIN).dylib
 		BODGE_CMAKE_OPTS += -DALSOFT_REQUIRE_COREAUDIO=ON
 		BUILD_HOOKS += build-darwin
+		STRIP := strip -ST
 	else
 		BIN := $(BIN).so
 		BODGE_CMAKE_OPTS += -DALSOFT_BACKEND_JACK=OFF
@@ -25,6 +26,8 @@ build: $(BIN) $(BUILD_HOOKS)
 build-windows:
 
 build-darwin:
+	install_name_tool -id "@rpath/$(BIN)" $(BIN)
+	install_name_tool -change "/usr/lib/libc++.1.dylib" "@loader_path/libc++.1.dylib" $(BIN)
 
 build-linux:
 	patchelf --set-soname "$(BIN).bodged" $(BIN)
@@ -51,7 +54,7 @@ $(BIN):
 	      $(BODGE_CMAKE_OPTS) .. \
 	&& cmake --build . --config Release --clean-first
 	cp -L openal/build/$(BIN) $(BIN)
-	strip -s $(BIN)
+	$(STRIP) $(BIN)
 
 
 clean:
