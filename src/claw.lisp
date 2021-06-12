@@ -1,12 +1,13 @@
-(uiop:define-package :%al
-  (:nicknames :%openal)
-  (:use))
-
-(claw:defwrapper (openal::openal
-                  (:system :bodge-openal)
-                  (:headers "bodge_al.h")
+(claw:defwrapper (:bodge-openal
+                  (:system :bodge-openal/wrapper)
+                  (:headers "src/bodge_al.h")
                   (:includes :openal-includes)
-                  (:include-definitions "^al[^c]\\w+" "^AL[^C]\\w+"))
+                  (:include-definitions "^al[^c]\\w+" "^AL[^C]\\w+")
+                  (:targets ((:and :x86-64 :linux) "x86_64-pc-linux-gnu")
+                            ((:and :x86-64 :windows) "x86_64-w64-mingw32")
+                            ((:and :x86-64 :drawin) "x86_64-apple-darwin-gnu"))
+                  (:persistent :bodge-openal-bindings
+                   :depends-on (:claw-utils)))
   :in-package :%al
   :trim-enum-prefix t
   :recognize-bitfields t
@@ -19,16 +20,17 @@
 
 
 
-(uiop:define-package :%alc
-  (:nicknames :%openal-context)
-  (:use))
-
-
-(claw:defwrapper (openal::openal-context
-                  (:system :bodge-openal)
-                  (:headers "bodge_alc.h")
+(claw:defwrapper (:bodge-openal-context
+                  (:system :bodge-openal/wrapper)
+                  (:headers "src/bodge_alc.h")
                   (:includes :openal-includes)
-                  (:include-definitions "^alc\\w+" "^ALC\\w+"))
+                  (:include-definitions "^alc\\w+" "^ALC\\w+")
+                  (:targets ((:and :x86-64 :linux) "x86_64-pc-linux-gnu")
+                            ((:and :x86-64 :windows) "x86_64-w64-mingw32")
+                            ((:and :x86-64 :drawin) "x86_64-apple-darwin-gnu"))
+                  (:persistent :bodge-openal-context-bindings
+                   :bindings-path "bindings/context/"
+                   :depends-on (:claw-utils)))
   :in-package :%alc
   :trim-enum-prefix t
   :recognize-bitfields t
