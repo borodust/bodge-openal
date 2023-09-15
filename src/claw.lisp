@@ -4,6 +4,8 @@
                   (:includes :openal-includes)
                   (:include-definitions "^al[^c]\\w+" "^AL[^C]\\w+")
                   (:targets ((:and :x86-64 :linux) "x86_64-pc-linux-gnu")
+                            ((:and :ppc64 :big-endian :linux) "powerpc64-pc-linux-gnu")
+                            ((:and :ppc64 :little-endian :linux) "powerpc64le-pc-linux-gnu")
                             ((:and :x86-64 :windows) "x86_64-w64-mingw32")
                             ((:and :x86-64 :darwin) "x86_64-apple-darwin-gnu"))
                   (:persistent :bodge-openal-bindings
@@ -26,6 +28,8 @@
                   (:includes :openal-includes)
                   (:include-definitions "^alc\\w+" "^ALC\\w+")
                   (:targets ((:and :x86-64 :linux) "x86_64-pc-linux-gnu")
+                            ((:and :ppc64 :big-endian :linux) "powerpc64-pc-linux-gnu")
+                            ((:and :ppc64 :little-endian :linux) "powerpc64le-pc-linux-gnu")
                             ((:and :x86-64 :windows) "x86_64-w64-mingw32")
                             ((:and :x86-64 :darwin) "x86_64-apple-darwin-gnu"))
                   (:persistent :bodge-openal-context-bindings
